@@ -1,6 +1,8 @@
 let express = require("express")
 let cors = require("cors")
 let mongoose = require("mongoose")
+let https = require("https")
+let fs = require("fs")
 
 // CONNECT TO DATABASE
 mongoose.connect(
@@ -71,7 +73,10 @@ app.delete("/:id", (req, res) => {
 })
 
 // START SERVER
-app.listen(3000, () => {
-    console.log("server listening on port 3000")
-})
+let server = https.createServer({
+    key: fs.readFileSync("/etc/letsencrypt/live/139-162-135-50.ip.linodeusercontent.com/privkey.pem","utf8"),
+    cert: fs.readFileSync("/etc/letsencrypt/live/139-162-135-50.ip.linodeusercontent.com/fullchain.pem", "utf8")
+},app);
+
+server.listen(80);
 
