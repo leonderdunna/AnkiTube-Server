@@ -26,12 +26,11 @@ const cardSchema = new mongoose.Schema({
 const Card = mongoose.model("Card", cardSchema)
 
 const deckSchema = new mongoose.Schema({
-    name: String,
-    uuid: String,
-    ids: [],
+    path: [],
+    videos: [],
     children: []
 })
-const Deck = mongoose.model("Deck",deckSchema)
+const Deck = mongoose.model("Deck", deckSchema)
 
 // CREATE Routes
 let app = express()
@@ -60,10 +59,6 @@ app.get('/card/:deck', (req, res) => {
 });
 
 
-
-
-
-
 app.get('/deck/', (req, res) => {
     Deck.find({}, (err, found) => {
         if (!err) {
@@ -75,9 +70,10 @@ app.get('/deck/', (req, res) => {
     })
 });
 app.get('/deck/:uuid', (req, res) => {
-    Deck.find({uuid: req.params.uuid}, (err, found) => {
+    Deck.find({}, (err, found) => {
         if (!err) {
-            res.send(found);
+            let f = found.filter(e => e.path.at(-1).uuid + "" === req.params.uuid)
+            res.send(f);
         } else {
             console.log(err);
             res.send("Some error occured!")
@@ -86,17 +82,13 @@ app.get('/deck/:uuid', (req, res) => {
 });
 
 
-
-
-
-
 app.post("/card/", async (req, res) => {
     let validate = false
     if (req.body.id != null && req.body.deck_id != null) validate = true
     if (validate) {
         await Card.find({id: req.body.id}).remove()
         new Card(req.body).save().then(r => {
-            res.send({message:"Successfully added"})
+            res.send({message: "Successfully added"})
         })
     } else {
         console.log(req.body)
@@ -105,45 +97,56 @@ app.post("/card/", async (req, res) => {
 })
 app.delete("/card/:id", (req, res) => {
     Card.find({id: req.params.id}, (err, result) => {
-        console.log("Deleting:", result)
+        //console.log("Deleting:", result)
 
     }).remove()
     res.send({message: "Karte wird gelösht, wenn sie existiert"})
 })
 
 
-app.post("/deck", async (req, res) => {
+app.post("/deck/", async (req, res) => {
     let validate = false
-    if (req.body.uuid != null && req.body.name != null && req.body.children != null && req.body.ids != null) validate = true
+    if (req.body.path.length > 0 && req.body.children != null && req.body.videos != null) validate = true
     if (validate) {
-        await Deck.find({uuid: req.body.uuid}).remove()
-        new Deck(req.body).save().then(r => {
-            res.send({message: "Successfully added"})
-        })
+        await Deck.find({}, async (err, found) => {
+            let f = found.filter(e => e.path.at(-1).uuid === req.body.path.at(-1).uuid)
+            //console.log("removing", f)
+            for (let e of f)
+                await Deck.remove(e)
+            new Deck(req.body).save().then(r => {
+                res.send({message: "Successfully added"})
+            })
+        }).clone()
+
+
     } else {
         console.log(req.body)
         res.status(400).send({message: "dieses Deck kann nicht gespeichert werden, weil es den anforderungen nicht entspricht"})
     }
 })
 app.delete("/deck/:uuid", (req, res) => {
-    Deck.find({uuid: req.params.uuid}, (err, result) => {
-        console.log("Deleting:", result, req.params.uuid)
+    Deck.find({}, async (err, result) => {
+        //console.log("Deleting:", result, req.params.uuid)
+        let f = result.filter(e => e.path.at(-1).uuid + "" === req.params.uuid)
+        for (let e of f)
+            await Deck.remove(e)
+        res.send({message: "Deck wird gelösht, wenn es existiert"})
+    })
 
-    }).remove()
-    res.send({message:"Deck wird gelösht, wenn es existiert"})
 })
 
 // START SERVER testing
+/*
 app.listen(3000, () => {
     console.log("AnkiTube Server Testing is listening on port 3000")
 })
-
+*/
 
 // START SERVER Prod...
-/*
+
 let server = https.createServer({
-    key: fs.readFileSync("/etc/letsencrypt/live/139-162-135-50.ip.linodeusercontent.com/privkey.pem","utf8"),
+    key: fs.readFileSync("/etc/letsencrypt/live/139-162-135-50.ip.linodeusercontent.com/privkey.pem", "utf8"),
     cert: fs.readFileSync("/etc/letsencrypt/live/139-162-135-50.ip.linodeusercontent.com/fullchain.pem", "utf8")
-},app);
+}, app);
 server.listen(80);
-*/
+
