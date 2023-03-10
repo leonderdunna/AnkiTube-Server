@@ -128,6 +128,7 @@ app.delete("/deck/:uuid", (req, res) => {
     Deck.find({}, async (err, result) => {
         //console.log("Deleting:", result, req.params.uuid)
         let f = result.filter(e => e.path[e.path.length -1].uuid + "" === req.params.uuid)
+        console.log(f)
         for (let e of f)
             await Deck.remove(e)
         res.send({message: "Deck wird gelösht, wenn es existiert"})
