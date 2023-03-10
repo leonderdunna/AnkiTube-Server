@@ -27,7 +27,7 @@ const Card = mongoose.model("Card", cardSchema)
 
 const deckSchema = new mongoose.Schema({
     path: [],
-    videos: [],
+    stapel: [],
     children: []
 })
 const Deck = mongoose.model("Deck", deckSchema)
@@ -72,7 +72,7 @@ app.get('/deck/', (req, res) => {
 app.get('/deck/:uuid', (req, res) => {
     Deck.find({}, (err, found) => {
         if (!err) {
-            let f = found.filter(e => e.path.at(-1).uuid + "" === req.params.uuid)
+            let f = found.filter(e => e.path[e.path.length -1].uuid + "" === req.params.uuid)
             res.send(f);
         } else {
             console.log(err);
@@ -106,10 +106,10 @@ app.delete("/card/:id", (req, res) => {
 
 app.post("/deck/", async (req, res) => {
     let validate = false
-    if (req.body.path.length > 0 && req.body.children != null && req.body.videos != null) validate = true
+    if (req.body.path.length > 0 && req.body.children != null && req.body.stapel != null) validate = true
     if (validate) {
         await Deck.find({}, async (err, found) => {
-            let f = found.filter(e => e.path.at(-1).uuid === req.body.path.at(-1).uuid)
+            let f = found.filter(e => e.path[e.path.length -1].uuid === req.body.path[req.body.path.length -1].uuid)
             //console.log("removing", f)
             for (let e of f)
                 await Deck.remove(e)
@@ -127,7 +127,7 @@ app.post("/deck/", async (req, res) => {
 app.delete("/deck/:uuid", (req, res) => {
     Deck.find({}, async (err, result) => {
         //console.log("Deleting:", result, req.params.uuid)
-        let f = result.filter(e => e.path.at(-1).uuid + "" === req.params.uuid)
+        let f = result.filter(e => e.path[e.path.length -1].uuid + "" === req.params.uuid)
         for (let e of f)
             await Deck.remove(e)
         res.send({message: "Deck wird gelösht, wenn es existiert"})
