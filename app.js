@@ -151,3 +151,11 @@ let server = https.createServer({
 }, app);
 server.listen(80);
 
+const GUN = require("gun")
+
+const gun_server = require('http').createServer({
+    key: fs.readFileSync("/etc/letsencrypt/live/139-162-135-50.ip.linodeusercontent.com/privkey.pem", "utf8"),
+    cert: fs.readFileSync("/etc/letsencrypt/live/139-162-135-50.ip.linodeusercontent.com/fullchain.pem", "utf8")
+}).listen(8765);
+const gun = GUN({web: gun_server});
+
